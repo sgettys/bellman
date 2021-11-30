@@ -20,7 +20,10 @@ func (r *SingleMessageRegistry) Send(name string, dat []byte) {
 }
 
 func (r *SingleMessageRegistry) Register(name string, crier criers.Crier) {
-
+	if r.criers == nil {
+		r.criers = make(map[string]criers.Crier)
+	}
+	r.criers[name] = crier
 }
 
 func (r *SingleMessageRegistry) Close() {
