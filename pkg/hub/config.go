@@ -4,8 +4,8 @@ import "github.com/sgettys/bellman/pkg/criers"
 
 // Config allows configuration
 type Config struct {
-	LogLevel  string                  `yaml:"logLevel"`
-	LogFormat string                  `yaml:"logFormat"`
+	LogLevel  string                  `yaml:"loglevel"`
+	LogFormat string                  `yaml:"logformat"`
 	Receivers []criers.ReceiverConfig `yaml:"receivers"`
 }
 

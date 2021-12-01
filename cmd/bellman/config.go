@@ -13,14 +13,15 @@ import (
 var (
 
 	// ConfigDir is where to look for the config file
-	configDir = os.ExpandEnv("$HOME") + "/.config"
+	defaultConfDir = os.ExpandEnv("$HOME") + "/.config"
 	// TokenRequires defines what must be provided to get a token
 
-	// YamlDefaults yaml can't have tabs....
+	// Default config will send to stdout
 	YamlDefaults = []byte(`
-logLevel: info
+loglevel: error
+logformat: pretty 
 receivers:
-  - name: "dump"
+  - name: "default"
     stdout: { }
 `)
 )
@@ -53,7 +54,7 @@ func mergeInConfig(cfgLocation string) {
 			log.Debug().Msg("config file not found")
 
 		} else {
-			log.Warn().Msg("error with config file")
+			log.Warn().Err(err).Msg("error with config file")
 		}
 	}
 }

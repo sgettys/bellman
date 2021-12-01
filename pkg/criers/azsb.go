@@ -42,7 +42,7 @@ func (azs *AzSbSink) Send(ctx context.Context, dat []byte) error {
 		return err
 	}
 	defer topic.Close(ctx)
-	msg := &azsb.Message{}
+	msg := &azsb.Message{Data: dat}
 	if azs.layout == nil {
 		//msg.Data = ev.ToJSON()
 	} else {

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"path"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -12,7 +15,7 @@ import (
 )
 
 var (
-	conf, data, dataFile string
+	conf, data, dataFile, name string
 )
 
 var rootCmd = &cobra.Command{
@@ -25,17 +28,22 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVarP(&conf, "config", "c", "", "config file path")
 	rootCmd.PersistentFlags().StringVarP(&data, "data", "d", "", "data to send")
 	rootCmd.PersistentFlags().StringVarP(&dataFile, "file", "f", "", "file with data to send")
+	rootCmd.PersistentFlags().StringVarP(&name, "name", "n", "", "receiver name to send to")
+	cobra.OnInitialize(initConfig)
 }
 
 func initConfig() {
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	log.Debug().Msg("init config")
-	mergeInConfig(path.Join(configDir, conf))
-	log.Debug().Str("viper", getViperAsString(viper.GetViper())).Msg("config")
+	var confDir string
+	log.Logger = log.With().Caller().Logger().Level(zerolog.DebugLevel)
+	if conf != "" {
+		confDir = path.Dir(conf)
+	} else {
+		confDir = defaultConfDir
+	}
+	mergeInConfig(confDir)
 	viper.AutomaticEnv()
 }
 
@@ -49,9 +57,30 @@ func execute() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot parse config to YAML")
 	}
+	if cfg.LogLevel != "" {
+		level, err := zerolog.ParseLevel(cfg.LogLevel)
+		if err != nil {
+			log.Fatal().Err(err).Str("level", cfg.LogLevel).Msg("Invalid log level")
+		}
+		log.Logger = log.Logger.Level(level)
+	}
+	if cfg.LogFormat == "json" {
+		fmt.Println(cfg.LogFormat)
+		// Defaults to JSON do nothing
+	} else if cfg.LogFormat == "" || cfg.LogFormat == "pretty" {
+		log.Logger = log.Logger.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			NoColor:    false,
+			TimeFormat: time.RFC3339,
+		})
+	}
 	registry := hub.SingleMessageRegistry{}
 	hub := hub.NewHub(&cfg, &registry)
-	hub.Registry.Send("dump", []byte(`{"hello": "world"}`))
+	if name != "" {
+		hub.Registry.Send(name, []byte(data))
+	} else {
+		hub.Registry.SendAll([]byte(data))
+	}
 	// TODO: Implement plugin registration
 	// plugins, err := listPlugins("./.plugins", ".*.so")
 	// if err != nil {
