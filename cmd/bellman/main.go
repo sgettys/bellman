@@ -53,6 +53,7 @@ func main() {
 
 func execute() {
 	var cfg hub.Config
+	var d []byte
 	err := yaml.Unmarshal([]byte(getViperAsString(viper.GetViper())), &cfg)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot parse config to YAML")
@@ -76,10 +77,20 @@ func execute() {
 	}
 	registry := hub.SingleMessageRegistry{}
 	hub := hub.NewHub(&cfg, &registry)
-	if name != "" {
-		hub.Registry.Send(name, []byte(data))
+	if dataFile != "" {
+		log.Debug().Msgf("Reading data from %s", dataFile)
+		dat, err := os.ReadFile(dataFile)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Unable to read file")
+		}
+		d = []byte(dat)
 	} else {
-		hub.Registry.SendAll([]byte(data))
+		d = []byte(data)
+	}
+	if name != "" {
+		hub.Registry.Send(name, d)
+	} else {
+		hub.Registry.SendAll(d)
 	}
 	// TODO: Implement plugin registration
 	// plugins, err := listPlugins("./.plugins", ".*.so")
