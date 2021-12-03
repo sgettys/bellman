@@ -21,7 +21,7 @@ LABEL maintainer="sgettys"
 RUN addgroup -S app \
 	&& adduser -S -G app app \
 	&& apk --no-cache add \
-	ca-certificates curl netcat-openbsd
+	ca-certificates curl netcat-openbsd jq
 
 WORKDIR /home/app
 
