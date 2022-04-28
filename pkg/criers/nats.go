@@ -34,21 +34,19 @@ func (n *NatsSbSink) Send(ctx context.Context, dat []byte) error {
 		return err
 	}
 	defer nc.Close()
-
+	log.Debug().Msg("SUccessfully connected to nats")
 	ec, err := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	if err != nil {
 		log.Debug().Err(err).Msg("Error creating json encoded connection")
 		return err
 	}
 	defer ec.Close()
-
+	log.Debug().Msgf("Publishing message: \n\n%v\n\n", string(dat))
 	err = ec.Publish(n.cfg.Topic, dat)
 	if err != nil {
 		log.Debug().Err(err).Msg("Error publishing to nats")
 		return err
 	}
-
-	return err
 
 	return nil
 }
